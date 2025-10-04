@@ -1,0 +1,110 @@
+services:
+  nginx:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./conf.d/:/etc/nginx/conf.d/:ro
+      - ./app1/static:/var/www/app1/static:ro
+      - ./app2/static:/var/www/app2/static:ro
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      - app1
+      - app2
+    # depends_on:
+    #   app1:
+    #     condition: service_healthy
+    #   app2:
+    #     condition: service_healthy
+    networks:
+      - nginx-network
+
+  app1:
+    build: 
+      context: ./app1
+      dockerfile: Dockerfile
+    expose:
+      - "5000"
+    environment:
+      - FLASK_ENV=development
+    volumes:
+      - ./app1:/app
+    networks:
+      - nginx-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  app2:
+    build:
+      context: ./app2
+      dockerfile: Dockerfile
+    expose:
+      - "3000"
+    environment:
+      - NODE_ENV=development
+      - INSTANCE_ID=1
+    volumes:
+      - ./app2:/app
+      - /app/node_modules
+    networks:
+      - nginx-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  app2_instance2:
+    build:
+      context: ./app2
+      dockerfile: Dockerfile
+    expose:
+      - "3000"
+    environment:
+      - NODE_ENV=development
+      - INSTANCE_ID=2
+    volumes:
+      - ./app2:/app
+      - /app/node_modules
+    networks:
+      - nginx-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  app2_instance3:
+    build:
+      context: ./app2
+      dockerfile: Dockerfile
+    expose:
+      - "3000"
+    environment:
+      - NODE_ENV=development
+      - INSTANCE_ID=3
+    volumes:
+      - ./app2:/app
+      - /app/node_modules 
+    networks:
+      - nginx-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+networks:
+  nginx-network:
+    driver: bridge

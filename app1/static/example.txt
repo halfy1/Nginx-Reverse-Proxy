@@ -1,0 +1,2 @@
+This is a static file from App1.
+It should be served directly by Nginx.
