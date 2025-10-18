@@ -1,16 +1,19 @@
-FROM nginx:stable-alpine
+FROM nginx:1.25-alpine
 
-RUN rm -rf /etc/nginx/conf.d/*
+RUN apk add --no-cache curl
 
-COPY nginx.conf /etc/nginx/nginx.conf
-COPY conf.d/*.conf /etc/nginx/conf.d/
+RUN mkdir -p /var/cache/nginx/app1 \
+    && mkdir -p /var/cache/nginx/app2 \
+    && chown -R nginx:nginx /var/cache/nginx
 
-RUN mkdir -p /var/cache/nginx /var/www/app1/static /var/www/app2/static
-RUN mkdir -p /var/log/nginx && \
-    touch /var/log/nginx/acces.log /var/log/nginx/error.log && \
-    chown -R nginx:nginx /var/log/nginx
+RUN mkdir -p /var/log/nginx \
+    && chown -R nginx:nginx /var/log/nginx
 
+RUN mkdir -p /var/www/app1/static \
+    && mkdir -p /var/www/app1/media \
+    && mkdir -p /var/www/app2/static \
+    && chown -R nginx:nginx /var/www
 
-EXPOSE 80
+EXPOSE 80 443 8080
 
-CMD ["nginx", "-g", "daemon off"]
+CMD ["nginx", "-g", "daemon off;"]
